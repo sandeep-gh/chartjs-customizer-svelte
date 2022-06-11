@@ -1,0 +1,16 @@
+* Code layout
+** attrmeta_basecfg.py
+encode all the cfg params and path for chartjs as nested addict
+
+** attrmeta_basecfg_helper.py
+Enum to represent various options for  params
+
+
+** attrmeta
+update_cfgattrmeta_kpath
+attrmeta_in_context
+attrupdate
+get_defaultVal
+
+** cfgattr_uic
+generates ui for cfgattr based on attrmeta

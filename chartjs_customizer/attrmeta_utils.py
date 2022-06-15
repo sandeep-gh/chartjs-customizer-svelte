@@ -8,13 +8,10 @@ if logging:
 
 from typing import NamedTuple, Any
 from addict import Dict
-from .dpathutils import walker as dictWalker
 from aenum import Enum, auto
-from .dpathutils import dget
-from justpy_chartjs.tags.style_values import Align, Position
-from justpy_chartjs.tags.style_values import Axis
-import webapp_framework as wf
 import tailwind_tags as twt
+from ofjustpy.dpathutils import dget, dnew, dpop, stitch_from_dictiter, dupdate
+from ofjustpy.dpathutils import walker as dictWalker
 from tailwind_tags import color2hex as hexify
 from .attrmeta_basecfg_helper import AttrMeta, PlotType, uiorgCat, Color, BorderCapStyle, LineJoinStyle, CubicInterpolationMode, FalseDict, is_visible
 
@@ -46,7 +43,7 @@ def attrupdate(cfgattrmeta, kpath, active):
 
     attrmeta = dget(cfgattrmeta, kpath)
     attrmeta = attrmeta._replace(active=bool(active))
-    wf.dupdate(cfgattrmeta, kpath, attrmeta)
+    dupdate(cfgattrmeta, kpath, attrmeta)
 
 
 # def is_visible(attrmeta):

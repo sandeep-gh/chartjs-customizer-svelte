@@ -1,4 +1,4 @@
-from aenum import Enum, auto
+from aenum import Enum, auto, StrEnum
 from typing import NamedTuple, Any
 
 
@@ -29,12 +29,13 @@ class AttrMeta(NamedTuple):
     context: Any  # describes all scenarios when attribute is active
 
 
-class PlotType(Enum):
+class PlotType(str, Enum):
     Line = "line"
     Bar = "bar"
     Scatter = "scatter"
     Bubble = "bubble"
-    Undef = None
+    Undef = "None"
+    
 
 
 class PointStyle(Enum):
@@ -73,7 +74,12 @@ class TextAlign(Enum):
     end = "end"
 
 
-class CartesianAxesType(Enum):
+class AxesType(Enum):
+    cartesian = 'Cartesian'
+    radial = 'radial'
+
+
+class CartesianAxisType(Enum):
     linear = "linear"
     logarithmic = "logarithmic"
     category = "category"
@@ -81,10 +87,44 @@ class CartesianAxesType(Enum):
     timeseries = "timeseries"
 #
 
-
-class Color(Enum):
+class Position(Enum):
+    top = "top"
+    left = "left"
+    bottom = "bottom"
+    right = "right"
+    chart = "chartArea"
     pass
 
+class Align(Enum):
+    start = "start"
+    center = "center"
+    end = "end"
+    
+# class PlotType(Enum):
+#     line = """type:'line'"""
+#     bar = """type:bar"""
+#     pass
+
+
+# options namespace
+class MaintainAspectRatio(Enum):
+    t = "maintainAspectRatio:true"
+    f = "maintainAspectRatio:false"
+    pass
+
+
+class Axis(Enum):
+    x = "x"
+    y = "y"
+    y1 = "y1"
+
+class Color(Enum):
+    black = "#000000"
+    white = "#FFFFFF"
+    red =  "#FF0000"
+    
+
+    
 
 class FalseDict(Enum):
     """

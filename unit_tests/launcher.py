@@ -14,10 +14,18 @@ if sys:
     logging.basicConfig(filename="launcher.log",
                         level=logging.DEBUG, format=FORMAT)
 
-from chartjs_customizer.wp_chartSetup  import wp_chartSetup
+#from chartjs_customizer.wp_chartSetup  import wp_chartSetup
 import justpy as jp
-app = jp.app
-jp.justpy(wp_chartSetup,  debug=True, start_server=False)
+from chartjs_customizer import wp_chartCustomizer
+# app = jp.app
+# jp.justpy(wp_chartSetup,  debug=True, start_server=False)
 # request = Dict()
 # request.session_id = "asession"
-# wp_chartSetup(request)
+# wp = wp_chartSetup(request)
+# stubStore = wp.session_manager.stubStore
+# print (stubStore.scaleCfg.deckpanel.keys())
+# plottype_stub = stubStore.chartSetup['/type']
+# msg = Dict()
+# msg.page = wp
+# msg.value = 'line'
+# plottype_stub.target.on_change(msg)

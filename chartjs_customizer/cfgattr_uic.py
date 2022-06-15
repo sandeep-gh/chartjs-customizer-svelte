@@ -9,18 +9,20 @@ if logging:
 
 from typing import NamedTuple, Any
 import ofjustpy as oj
+import ofjustpy_react as ojr
 from tailwind_tags import bg, pink, jc, db, jc, mr, shdw, gray
 import traceback
 #from . import attrmeta_utils
 
-
+@ojr.CfgLoopRunner
 def on_plotType_select(dbref, msg):
     '''
     plotType is special; scale configuration panel is updated on change in plot type
     '''
-    print("on_plotTypeSelect")
-    msg.page.update_scale_configurator(dbref, msg)
-    msg.page.update_ui_component(dbref, msg)  # in case there are other changes
+    #print("on_plotTypeSelect")
+    #msg.page.update_scale_configurator(dbref, msg)
+    #msg.page.update_ui_component(dbref, msg)  # in case there are other changes
+    return "/type", msg.value
 
 
 def reactor(dbref, msg):
@@ -174,6 +176,7 @@ def build_uic_iter(attrMetaIter):
         _ = kpath.split("/")
         if _[-1] == "value":  # value is used for FalseDict type attrmeta
             del _[-1]
+        print ("in uic ", kpath)
         return build_uic(kpath, _[-2]+"/"+_[-1], attrMeta)
     yield from filter(lambda _: _ is not None,
                       map(lambda _: build_uic_wrapper(_[0], _[1]),

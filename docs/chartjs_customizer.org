@@ -1,10 +1,21 @@
+* The cfg hierarchy
+_cfg.['/type']
+
+* Chart.js vocabulary
+- axes:
+  are of type cartesian or radial
+  cartesian applies to line, bubble, bar plot types
+  radial for others
+
+- axis:
+  the x and y axis. there can be multiple. so axises.
+    
 * Code layout
 ** attrmeta_basecfg.py
 encode all the cfg params and path for chartjs as nested addict
 
 ** attrmeta_basecfg_helper.py
 Enum to represent various options for  params
-
 
 ** attrmeta
 update_cfgattrmeta_kpath
@@ -14,3 +25,7 @@ get_defaultVal
 
 ** cfgattr_uic
 generates ui for cfgattr based on attrmeta
+
+** chartcfg
+from attrmeta build configuration for chartjs
+

@@ -7,14 +7,15 @@ from typing import NamedTuple, Any
 from addict import Dict, walker as dictWalker
 from aenum import Enum, auto
 from dpath.util import get as dget, set as dset, new as dnew, delete as dpop
-from justpy_chartjs.tags.style_values import Align, Position
-from justpy_chartjs.tags.style_values import Axis
-import webapp_framework as wf
+# from justpy_chartjs.tags.style_values import Align, Position
+# from justpy_chartjs.tags.style_values import Axis
+#import webapp_framework as wf
 import tailwind_tags as twt
 from tailwind_tags import color2hex as hexify
 
-from .attrmeta_basecfg_helper import AttrMeta, PlotType, uiorgCat, Color, BorderCapStyle, LineJoinStyle, CubicInterpolationMode, TextAlign, PointStyle
+from .attrmeta_basecfg_helper import AttrMeta, PlotType, uiorgCat, Color, BorderCapStyle, LineJoinStyle, CubicInterpolationMode, TextAlign, PointStyle,  Position
 
+from .attrmeta_basecfg_helper import AxesType
 all_context = [('*', '*')]
 
 
@@ -115,8 +116,74 @@ def OptionsPluginsLegendTitle(_cfg):
     # _cfg.text = AttrMeta(
     #     "legend_title", str, str, uiorgCat.simple, False, [('/options/plugins/legend/title/display', True), ('/options/plugins/legend/title/display', False)])
 
+def AxisCfgOptions(_cfg):
+    """
+    options common to all axes
+    """
 
-def OptionsScalesXAxisGrid(_cfg):
+    _ = _cfg
+    #_.type = AttrMeta('linear',?? , uiorgCat.advanced) #TODO:  ?? <- CartesianAxisType or globalAxisType
+    _.alignToPixels = AttrMeta(False, bool, bool, uiorgCat.TBD, False, [])
+    _.backgroundColor = AttrMeta("", Color, Color, uiorgCat.simple, False,[])
+    #TBD: padding
+    _.min = AttrMeta(None, int, int, uiorgCat.config, False, [])
+    _.max = AttrMeta(None, int, int, uiorgCat.config, False, [])
+    _.reversed = AttrMeta(False, bool, bool, uiorgCat.TBD, False,[])
+    # should the data be scaled
+    _.stacked = AttrMeta(False, bool, bool, uiorgCat.config, False,[])
+    _.suggestedMax = AttrMeta(None, int, int, uiorgCat.TBD, False, [])
+    _.suggestedMin = AttrMeta(None, int, int, uiorgCat.TBD, False, [])
+    # move away from chart area
+    _.weight = AttrMeta(0, int, int, uiorgCat.TBD, False, [])
+
+def CartesianAxisCfgOption(_cfg):
+    _ = _cfg
+    _.bounds	= AttrMeta("axis_bounds", str, str, uiorgCat.simple, False, [])
+    #_.position = TODO: string or object
+    _.stack  = AttrMeta("axis_stack", str, str, uiorgCat.simple, False, [])
+    _.stackWeight  = AttrMeta(None, int, int, uiorgCat.advanced, False, [])
+    _.axis   =  AttrMeta("axis_title", str, str, uiorgCat.simple, False, [])
+    _.offset = AttrMeta(False, bool, bool, uiorgCat.config, False, [])
+    
+    #_.title	object		
+#    
+def AxesTicksCfgOptions(_cfg):
+    """
+    Tick option for all axes
+    """
+    _ = _cfg
+    _.backdropColor = AttrMeta(
+        "", Color, Color, uiorgCat.nitpick, False, [])  # background color for label
+    _.backdropPadding = AttrMeta(
+        2, int, [0, 5], uiorgCat.advanced, False, [])  # padding for label backdrop
+    _.callback = AttrMeta(None, None, None, uiorgCat.TBD, False, [])
+    _.display = AttrMeta(False, bool, bool, uiorgCat.simple, True, [])
+    _.color = AttrMeta("", Color, Color, uiorgCat.nitpick, False, [])  # TBD
+    _.font = AttrMeta(None, None, None, uiorgCat.TBD, False, [])
+    # _.major = Dict(, False, []) #TBD: major tick formatting
+    _.padding = AttrMeta(2, int, int, uiorgCat.nitpick, False, [])
+    _.showLabelBackdrop = AttrMeta(False, bool, bool, uiorgCat.nitpick, False, [])
+    _.textStrokeColor = AttrMeta("", Color, Color, uiorgCat.TBD, False, [])
+    _.textStrokeWidth = AttrMeta(0, int, int, uiorgCat.TBD, False, [])
+
+    _.z = AttrMeta(0, int, int, uiorgCat.advanced, False, [])
+    
+def CartesianTicksCfgOptions(_cfg):
+    _ = _cfg
+    _.align = AttrMeta('center', ['start', 'center', 'end'], [
+                                'start', 'center', 'end'], uiorgCat.ocd, False, [])
+    _.crossAlign = AttrMeta("near", ["near", "center", "far"], [
+                                     "near", "center", "far"], uiorgCat.ocd, False, [])
+    _.sampleSize = AttrMeta(None, None, None, uiorgCat.TBD, False, [])
+    _.autoSkip = AttrMeta(True, bool, bool, uiorgCat.advanced, False, [])
+    _.autoSkipPadding = AttrMeta(3, int, int, uiorgCat.advanced, False, [])
+    _.includeBounds = AttrMeta(None, None, None, uiorgCat.TBD, False, [])
+    _.labelOffset = AttrMeta(0, int, [0, 5], uiorgCat.nitpick, False, [])
+    _.maxRotation = AttrMeta(50, int, [0, 5], uiorgCat.advanced, False, [])
+    _.minRotation = AttrMeta(0, int, [0, 5], uiorgCat.advanced, False, [])
+    _.mirror = AttrMeta(False, bool, bool, uiorgCat.advanced, False, [])
+
+def CartesianGrid(_cfg):
     _cfg.display = AttrMeta(
         False, bool, bool, uiorgCat.simple, True, [('/type', 'line')])
     _cfg.color = AttrMeta(
@@ -129,7 +196,10 @@ def OptionsScalesXAxisGrid(_cfg):
         None, None, None, uiorgCat.simple, False, [('/options/scales/xAxis/grid/display', 'line')])  # from for radar chart
 
 
-def get_basecfg():
+def get_basecfg(setupChoices):
+    """
+    setupChoices: the choices user made at chartSetup
+    """
     _base = cfgAttrMeta_base = Dict(track_changes=True)
     _base.type = AttrMeta(PlotType.Undef, PlotType,
                           PlotType, uiorgCat.chartSetup, True, all_context)
@@ -173,22 +243,42 @@ def get_basecfg():
 
         def Scales():
             scales = options.scales
+            def CartesianAxis(axis_id):
+                #following convention of chart.js to use
+                #obj for complex/nested json values
+                if axis_id:
+                    axis = scales[axis_id]
+                    AxisCfgOptions(axis)
+                    CartesianAxisCfgOption(axis)
 
-            def XAxis():
-                xAxis = scales.xAxis
-
-                def Grid():
-                    grid = xAxis.grid
-                    OptionsScalesXAxisGrid(grid)
-                XAxis.Grid = Grid
-            XAxis()
-            Scales.XAxis = XAxis
+                    
+                    #apply object options common to all cartesian axis
+                    # e.g grid , title, position, ticks
+                    grid = axis.grid
+                    CartesianGrid(grid)
+                    # ticks
+                    ticks = axis.ticks
+                    AxesTicksCfgOptions(ticks)
+                    CartesianTicksCfgOptions(ticks)
+                # def Grid():
+                #     # TODO: grid shouldn't belong to scales; 
+                #     grid = axis.grid
+                #     CartesianGrid(grid)
+                # CartesianAxis.Grid = Grid
+            CartesianAxis(None)
+            Scales.CartesianAxis = CartesianAxis
         Scales()
         Options.Scales = Scales
+
+    #dry call --> makes Options and its nested function a class/instance;
+    #Options.Elements and Options.Scales is now active
     Options()
 
-    Options.Elements.Line()
-    Options.Scales.XAxis.Grid()
-    Options.Plugins.Legend()  # also includes Legend.Labels,Legend.Title
-    # print(_base)
+    #Options.Elements.Line()
+    match setupChoices.axes.type:
+        case AxesType.cartesian:
+           for axis in setupChoices.axises:
+               Options.Scales.CartesianAxis(axis)
+    #Options.Plugins.Legend()  # also includes Legend.Labels,Legend.Title
+    
     return _base

@@ -18,7 +18,6 @@ chartSetupCfgUI_iter = build_uic_iter(
 
 def build_components(session_manager):
     
-    
     appstate = session_manager.appstate
     with session_manager.uictx("chartSetup") as chartSetupCtx:
         _ictx = chartSetupCtx
@@ -27,11 +26,12 @@ def build_components(session_manager):
         oj.Subsection_("uipanel", "Chart Setup Configs",
                        oj.StackW_("uibox", cgens=chartSetupCfgUI_iter)
                        )
-        oj.Button_(
-            "SubmitBtn",  text="Submit", value="Build Chart").event_handle(oj.click, on_submitbtn_click)
+        # oj.Button_(
+        #     "SubmitBtn",  text="Submit", value="Build Chart").event_handle(oj.click, on_submitbtn_click)
             
-        submit_ = oj.Halign_(_ictx.SubmitBtn)
-        oj.StackV_("topPanel", cgens=[_ictx.uipanel, submit_])
+        #submit_ = oj.Halign_(_ictx.SubmitBtn)
+        #oj.StackV_("topPanel", cgens=[_ictx.uipanel, submit_])
+        oj.StackV_("topPanel", cgens=[_ictx.uipanel])        
 
 
     # ======= scale selection/configuration based on plot type =======
@@ -49,8 +49,6 @@ def build_components(session_manager):
                                        text="use the default x-axis").event_handle(oj.click, set_x)
                                           ]
                                    )
-                
-            
                     with session_manager.uictx("_xaxes") as _xaxesctx:
                         _ctx = _xaxesctx
 
@@ -81,3 +79,17 @@ def build_components(session_manager):
                     oj.StackV_("panel", cgens=[oj.StackH_("btns", cgens=[_xctx.xbtn, _xctx.xaxesbtn]),
                                                                                                                                            _xctx.deck])
                     oj.Subsection_("section", "Configure X scales", _xctx.panel)
+
+        with session_manager.uictx("deckpanel") as deckCtx:
+            oj.StackD_("panel_scalecfg_allplottypes",
+                       cgens = [
+                           oj.Span_("None", text="Select plot type to enable scale configuration"),
+                           oj.Span_("line", text="Show config option for line plot"),
+                           oj.Span_("bar", text="Show config option for bar plot"),
+                           oj.Span_("scatter", text="Show config option for bar plot"),                           
+                           oj.Span_("bubble", text="Show config option for radial plot"),
+                           oj.Span_("polar", text="Show config option for polar plot")
+
+                       ],
+                       reactctx = [ojr.Ctx("/cfgbase/type", ojr.isstr, ojr.UIOps.DECK_SHUFFLE)]
+                       )

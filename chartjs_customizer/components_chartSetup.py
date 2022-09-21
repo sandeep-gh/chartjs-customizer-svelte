@@ -5,33 +5,43 @@ import ofjustpy as oj
 import ofjustpy_extn as ojx
 import ofjustpy_react as ojr
 
-from .attrmeta_basecfg_helper import uiorgCat, FalseDict, CartesianAxesType
+from .attrmeta_basecfg_helper import uiorgCat, FalseDict, CartesianAxisType
+from .attrmeta_basecfg_helper import AxesType, PlotType
 from .attrmeta_basecfg import get_basecfg
 from .cfgattr_uic import build_uic_iter
-
+from addict import Dict
 opts = jsbeautifier.default_options()
-cfgAttrMeta = get_basecfg()
-#UI element for chartSetupConfig
-chartSetupCfgUI_iter = build_uic_iter(
-    filter(lambda _: _[1].group == uiorgCat.chartSetup, oj.dictWalker(cfgAttrMeta))
-    )
+# setupChoices = Dict()
+# setupChoices.plotType = PlotType.Line
+# setupChoices.axes.type = AxesType.cartesian #This happens because the plot type is 'Line/Bar/Bubble/Scatter'
+#setupChoices.axis.type = CartesianAxisType.linear
+#setupChoices.axises =  ['x', 'y'] #We have cartesian axesj
 
+#UI element for chartSetupConfig
 def build_components(session_manager):
     
     appstate = session_manager.appstate
+    
+    chartSetupCfgUI_iter = build_uic_iter(
+        
+    filter(lambda _: _[1].group == uiorgCat.chartSetup, oj.dictWalker(appstate.cfgAttrMeta))
+    )
+
     with session_manager.uictx("chartSetup") as chartSetupCtx:
         _ictx = chartSetupCtx
+        
         def on_submitbtn_click(dbref, msg):
+            return "/chartSetup", None
             print("go on...build the chart")
         oj.Subsection_("uipanel", "Chart Setup Configs",
                        oj.StackW_("uibox", cgens=chartSetupCfgUI_iter)
                        )
-        # oj.Button_(
-        #     "SubmitBtn",  text="Submit", value="Build Chart").event_handle(oj.click, on_submitbtn_click)
+        oj.Button_(
+            "SubmitBtn",  text="Submit", value="Build Chart").event_handle(oj.click, on_submitbtn_click)
             
-        #submit_ = oj.Halign_(_ictx.SubmitBtn)
-        #oj.StackV_("topPanel", cgens=[_ictx.uipanel, submit_])
-        oj.StackV_("topPanel", cgens=[_ictx.uipanel])        
+        submit_ = oj.Halign_(_ictx.SubmitBtn)
+        oj.StackV_("topPanel", cgens=[_ictx.uipanel, submit_])
+        #oj.StackV_("topPanel", cgens=[_ictx.uipanel])        
 
 
     # ======= scale selection/configuration based on plot type =======
@@ -51,21 +61,21 @@ def build_components(session_manager):
                                    )
                     with session_manager.uictx("_xaxes") as _xaxesctx:
                         _ctx = _xaxesctx
-
                         oj.LabeledInput_("id", label="axes id", placeholder="new id")
                         ojx.EnumSelector_(
-                            "axestype", CartesianAxesType, "Choose Axes Type")
+                            "axestype", CartesianAxisType, "Choose Axes Type")
 
                         # def on_addaxesbtn_click(dbref, msg):
                         #     _lctx.scalesNoticeboard.showText("added new axes")
-                        oj.Button_("addaxesbtn", value="newid", label="add axes")
+                        oj.Button_("addaxesbtn", value="newid", text="Add new axes", label="add axes")
+                        oj.StackH_("card",
+                                   cgens=[oj.StackV_("newaxes",
+                                                     cgens=[_ctx.id, _ctx.axestype]),
+                                          _ctx.addaxesbtn]
+                                   )
                         # oj.StackH_(
                         #     "card",
-                        #     cgens=[oj.StackV_("newaxes", cgens=[_ctx.id, _ctx.axestype]), _ctx.addaxesbtn])
-
-                        oj.StackH_(
-                            "card",
-                            cgens=[oj.StackV_("newaxes", cgens=[_ctx.id]), _ctx.addaxesbtn])
+                        #     cgens=[oj.StackV_("newaxes", cgens=[_ctx.id]), _ctx.addaxesbtn])
                                                 
                     def deck_card_selector(dbref, msg):
                         print("deck selector called :", msg.value)
@@ -80,11 +90,15 @@ def build_components(session_manager):
                                                                                                                                            _xctx.deck])
                     oj.Subsection_("section", "Configure X scales", _xctx.panel)
 
+
+            
         with session_manager.uictx("deckpanel") as deckCtx:
+            print ("line panel = ", linePlotCtx.panel)
             oj.StackD_("panel_scalecfg_allplottypes",
                        cgens = [
                            oj.Span_("None", text="Select plot type to enable scale configuration"),
-                           oj.Span_("line", text="Show config option for line plot"),
+                           #oj.Span_("line", text="Show config option for line plot"),
+                           oj.Div_("line", cgens = [_xctx.section]),
                            oj.Span_("bar", text="Show config option for bar plot"),
                            oj.Span_("scatter", text="Show config option for bar plot"),                           
                            oj.Span_("bubble", text="Show config option for radial plot"),
@@ -93,3 +107,7 @@ def build_components(session_manager):
                        ],
                        reactctx = [ojr.Ctx("/cfgbase/type", ojr.isstr, ojr.UIOps.DECK_SHUFFLE)]
                        )
+
+
+
+

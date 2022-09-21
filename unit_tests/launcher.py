@@ -14,9 +14,22 @@ if sys:
     logging.basicConfig(filename="launcher.log",
                         level=logging.DEBUG, format=FORMAT)
 
-#from chartjs_customizer.wp_chartSetup  import wp_chartSetup
+#from chartjs_customizer import components_chartCustomizer    
+from chartjs_customizer.wp_chartSetup  import wp_chartSetup as primary_endpoint
+from chartjs_customizer.wp_chartCustomizer  import wp_chartCustomizer 
+
 import justpy as jp
-from chartjs_customizer import wp_chartCustomizer
+#from chartjs_customizer import wp_chartCustomizer
+app = jp.app
+#jp.Route("/", primary_endpoint)
+jp.Route("/", wp_chartCustomizer)
+# from starlette.testclient import TestClient
+# client = TestClient(app)
+# response = client.get('/')
+
+
+
+
 # app = jp.app
 # jp.justpy(wp_chartSetup,  debug=True, start_server=False)
 # request = Dict()

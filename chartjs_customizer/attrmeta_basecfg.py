@@ -115,7 +115,7 @@ def OptionsPluginsLegendTitle(_cfg):
 
     # _cfg.text = AttrMeta(
     #     "legend_title", str, str, uiorgCat.simple, False, [('/options/plugins/legend/title/display', True), ('/options/plugins/legend/title/display', False)])
-
+    pass
 def AxisCfgOptions(_cfg):
     """
     options common to all axes
@@ -275,10 +275,11 @@ def get_basecfg(setupChoices):
     Options()
 
     #Options.Elements.Line()
-    match setupChoices.axes.type:
-        case AxesType.cartesian:
-           for axis in setupChoices.axises:
-               Options.Scales.CartesianAxis(axis)
-    #Options.Plugins.Legend()  # also includes Legend.Labels,Legend.Title
+    if setupChoices:
+        match setupChoices.axes.type:
+            case AxesType.cartesian:
+               for axis in setupChoices.axises:
+                   Options.Scales.CartesianAxis(axis)
+    Options.Plugins.Legend()  # also includes Legend.Labels,Legend.Title
     
     return _base

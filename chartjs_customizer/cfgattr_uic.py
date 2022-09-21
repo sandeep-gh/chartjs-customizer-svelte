@@ -10,6 +10,7 @@ if logging:
 from typing import NamedTuple, Any
 import ofjustpy as oj
 import ofjustpy_react as ojr
+import ofjustpy_extn as ojx
 from tailwind_tags import bg, pink, jc, db, jc, mr, shdw, gray
 import traceback
 #from . import attrmeta_utils
@@ -41,7 +42,8 @@ def input_change(dbref, msg):
 
 
 def update_chart(dbref, msg):
-    msg.page.react_ui(wf.ReactTag_UI.UpdateChart, None)
+    #msg.page.react_ui(wf.ReactTag_UI.UpdateChart, None)
+    assert False
 
 
 def build_uic(key, label, attrMeta):
@@ -57,7 +59,7 @@ def build_uic(key, label, attrMeta):
 
             match attrMeta.vrange:
                 case type():
-                    return wf.LabeledInput_(key,  label, attrMeta.default, 
+                    return oj.LabeledInput_(key,  label, attrMeta.default, 
                                             pcp=pcp).event_handle(oj.change, update_chart)
                 case[x, y]:
                     # return wf.Wrapdiv_(
@@ -66,7 +68,15 @@ def build_uic(key, label, attrMeta):
                     #             x, y), attrMeta.default, update_chart), label, pcp=pcp
                     #     ), [db.f, jc.center, mr/2]
                     # )
-                    print("TODO: slider not implemented yet")
+                    return oj.Halign_(oj.StackH_(key,
+                                                 cgens=[oj.WithBanner_(key, key,
+                                                                       oj.Slider_(key, range(x,y))
+                                                                       )
+                                                        ]
+                                                 ),
+                                      pcp=[mr/2]
+                                      ).event_handle(oj.click, update_chart)
+                
 
                 case _:
                     print("skipping ", key)
@@ -75,11 +85,11 @@ def build_uic(key, label, attrMeta):
         case "<class 'str'>":
             match attrMeta.vrange:
                 case type():
-                    return wf.LabeledInput_(key,  label, attrMeta.default, 
+                    return oj.LabeledInput_(key,  label, attrMeta.default, 
                                             pcp=pcp).event_handle(oj.change, update_chart)
                 
                 case[x, y]:
-                    print("skipping str", key)
+                    print("skipping str range ", key)
                     return None
                 case _:
                     print("skipping str", key)
@@ -88,12 +98,12 @@ def build_uic(key, label, attrMeta):
             match attrMeta.vrange:
                 case type():
                     # Put float type
-                    return wf.LabeledInput_(key,  label, attrMeta.default, 
+                    return oj.LabeledInput_(key,  label, attrMeta.default, 
                                             pcp=pcp).event_handle(oj.change, update_chart)
 
                 case[x, y]:
                     # TODO: check range
-                    return wf.LabeledInput_(key,  label, attrMeta.default, 
+                    return oj.LabeledInput_(key,  label, attrMeta.default, 
                                             pcp=pcp).event_handle(oj.change, update_chart)
 
 
@@ -102,17 +112,16 @@ def build_uic(key, label, attrMeta):
                     return None
 
         case "<aenum 'Color'>":
-            print("TODO: ui for color type cfg not implemented")
-            #return wf.ColorSelectorWBanner_(key, label, update_chart, pcp=[jc.center, *pcp])
+            return oj.Halign_(
+                oj.WithBanner_(key, key, oj.ColorSelector_(key).event_handle(oj.click, update_chart)))
+        
 
         case "<class 'bool'>" | "<aenum 'FalseDict'>":
-            # TODO: move to wf.fc
-            print("TODO: ui bool/FalseDict type cfg not implemented")
-            # return wf.Wrapdiv_(
-            #     wf.ToggleBtn_(
-            #         key, label, reactor, value=attrMeta.default, pcp=pcp)
-
-            # )
+            return oj.Halign_(
+                oj.Checkbox_(
+                    key, key,  value=attrMeta.default).event_handle(oj.input, input_change)
+                
+            )
 
         case "<aenum 'Position'>" | "<aenum 'TextAlign'>" | "<aenum 'PointStyle'>" | "<aenum 'cubicInterpolationMode'>" | "<aenum 'LineJoinStyle'>":
             print("TODO: ui for  EnumType config not implement")
@@ -128,14 +137,17 @@ def build_uic(key, label, attrMeta):
             #                         on_select=update_chart, pcp=pcp
             #                         )
             # )
+            return ojx.EnumSelector_(key, attrMeta.vtype, label=key, on_select = input_change)
 
         # by design we don't allow plottype change to be interactive;plottype has to selected initially as is fixed
         # for rest of the lifecycle
         case  "<aenum 'PlotType'>":
+               logger.debug("Build ui for plottype")
                return oj.Select_(key,
                                  [oj.Option_(str(_.value), text=str(_.value), value=str(_.value))
                                   for _ in attrMeta.vtype],
-                                 value=next(iter(attrMeta.vtype)).value,
+                                 #value=next(iter(attrMeta.vtype)).value,
+                                 value=getattr(attrMeta.vtype, "Undef").value,
                                  pcp=pcp).event_handle(oj.change, on_plotType_select)
             # return wf.Wrapdiv_(
             #     wf.SelectorWBanner_(key, label,

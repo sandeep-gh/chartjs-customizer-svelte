@@ -14,13 +14,14 @@ import ofjustpy as oj
 import ofjustpy_extn as ojx
 import ofjustpy_react as ojr
 
-from .cfgattr_uic import build_uic_iter
+#from .cfgattr_uic import build_uic_iter
+from .cfgattr_uic_kv import build_uic_iter
 from .chartcfg import build_pltcfg
 from .attrmeta_basecfg import get_basecfg
 from .attrmeta_basecfg_helper import is_visible
 from .attrmeta_basecfg_helper import uiorgCat, PlotType
 from .attrmeta_basecfg_helper import AxesType, PlotType
-
+from tailwind_tags import space, y
 top_level_group = ["options/elements",
                    "options/plugins", "options/scales", "data"]
 tier1_level_group = {"options/elements": ["line", "point"],
@@ -92,12 +93,15 @@ def build_uigroup_blocks_(grouptag: str,   cfgattrmeta: Dict):
         yield from filter(lambda _: is_in_subgroup(_[0]), group_iter())
 
     def build_ui_panel(tlkey, subkey=None):
-        return oj.StackG_(tlkey, num_cols=2,
-                          cgens=build_uic_iter(subgroup_iter(
-                              tlkey, subkey),  # all cfgattr that come under options but not under elements or scales
-                          )
-                          )
-
+        return oj.StackV_(tlkey, cgens = build_uic_iter(subgroup_iter(
+                              tlkey, subkey)),
+                          pcp=[space/y/2])
+        # return oj.StackG_(tlkey, num_cols=2,
+        #                   cgens=build_uic_iter(subgroup_iter(
+        #                       tlkey, subkey),  # all cfgattr that come under options but not under elements or scales
+        #                   )
+        #                   )
+           
     top_level_ui = Dict([(_, build_ui_panel(_)) for _ in top_level_group])
     tier1_level_ui = Dict()
     for tlkey in top_level_group:

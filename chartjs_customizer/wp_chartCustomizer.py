@@ -97,6 +97,7 @@ def wp_chartCustomizer(request):
                          
                          template_file='svelte.html',
                          title="Customize chart using chart.js")()
+        oj.get_svelte_safelist(session_manager.stubStore)
         wp.session_manager = session_manager
         #wp = jp.WebPage(template_file='svelte.html', title="a svelte page")
     return wp

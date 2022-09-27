@@ -11,7 +11,7 @@ from typing import NamedTuple, Any
 import ofjustpy as oj
 import ofjustpy_react as ojr
 import ofjustpy_extn as ojx
-from tailwind_tags import bg, pink, jc, db, jc, mr, shdw, gray, blue
+from tailwind_tags import bg, pink, jc, db, jc, mr, shdw, gray, blue, W, full, ta
 import traceback
 #from . import attrmeta_utils
 
@@ -46,6 +46,16 @@ def update_chart(dbref, msg):
     assert False
 
 
+def build_kv_record(key, label, component_):
+    pcp = component_.kwargs.get('twsty_tags')
+    pcp.append(W/"3/4")
+    eq_ = oj.Span_("eqt", text=":", pcp=[jc.center])
+    label_= oj.Span_("aspan", text=label , pcp=[ta.end, W/"1/2"])
+    rec_ = oj.StackH_(key, cgens=[ label_, eq_, oj.Halign_(component_, "start")], pcp=[W/full])
+    #records_ = oj.Align_(oj.StackV_("records", cgens=[r1_, r1_]))
+    return rec_
+
+        
 def build_uic(key, label, attrMeta):
     """
     build uic generator from attr description
@@ -60,12 +70,14 @@ def build_uic(key, label, attrMeta):
 
             match attrMeta.vrange:
                 case type():
-                    return oj.Halign_(oj.LabeledInput_(key,
-                                                       label,
-                                                       attrMeta.default, 
-                                                       pcp=pcp).event_handle(oj.change,
+                    input_ = oj.InputChangeOnly_("input",
+                                                 placeholder=attrMeta.default,
+                                                 type="text").event_handle(oj.change,
                                                                              update_chart)
-                                      )
+                    
+                    return build_kv_record(key, label,  input_)
+
+                
                 case[x, y]:
                     # return wf.Wrapdiv_(
                     #     wf.WithBanner_(
@@ -73,12 +85,11 @@ def build_uic(key, label, attrMeta):
                     #             x, y), attrMeta.default, update_chart), label, pcp=pcp
                     #     ), [db.f, jc.center, mr/2]
                     # )
-                    return oj.Halign_(oj.WithBanner_(key,
-                                                     key,
-                                                     oj.Slider_(key, range(x,y), pcp=[]).event_handle(oj.click, update_chart), pcp=[]
-                                                     )
-                                      )
-
+                    input_ = oj.Slider_(key,
+                                        range(x,y),
+                                        pcp=[]).event_handle(oj.click, update_chart)
+                    
+                    return build_kv_record(key, label,  input_)
                 case _:
                     print("skipping ", key)
                     return None  # not handling multi-attribute ranges
@@ -86,9 +97,13 @@ def build_uic(key, label, attrMeta):
         case "<class 'str'>":
             match attrMeta.vrange:
                 case type():
-                    return oj.LabeledInput_(key,  label, attrMeta.default, 
-                                            pcp=pcp).event_handle(oj.change, update_chart)
-                
+                    input_ = oj.InputChangeOnly_("input",
+                                                 placeholder=attrMeta.default,
+                                                 type="text").event_handle(oj.change,
+                                                                             update_chart)
+                    
+                    return build_kv_record(key, label,  input_)
+
                 case[x, y]:
                     print("skipping str range ", key)
                     return None
@@ -99,13 +114,18 @@ def build_uic(key, label, attrMeta):
             match attrMeta.vrange:
                 case type():
                     # Put float type
-                    return oj.LabeledInput_(key,  label, attrMeta.default, 
-                                            pcp=pcp).event_handle(oj.change, update_chart)
-
+                    input_ = oj.InputChangeOnly_("input",
+                                                 placeholder=attrMeta.default,
+                                                 type="text").event_handle(oj.change,
+                                                                             update_chart)
+                    
+                    return build_kv_record(key, label,  input_)
+                
                 case[x, y]:
                     # TODO: check range
-                    return oj.LabeledInput_(key,  label, attrMeta.default, 
-                                            pcp=pcp).event_handle(oj.change, update_chart)
+                    return None
+                    # return oj.LabeledInput_(key,  label, attrMeta.default, 
+                    #                         pcp=pcp).event_handle(oj.change, update_chart)
 
 
                 case _:
@@ -113,32 +133,19 @@ def build_uic(key, label, attrMeta):
                     return None
 
         case "<aenum 'Color'>":
-            return oj.Halign_(
-                oj.WithBanner_(key, key, oj.ColorSelector_(key).event_handle(oj.click, update_chart)))
+
+            input_ = oj.ColorSelector_(key).event_handle(oj.click, update_chart)
+            return build_kv_record(key, label,  input_)
         
 
         case "<class 'bool'>" | "<aenum 'FalseDict'>":
-            return oj.Halign_(
-                oj.Checkbox_(
-                    key, key,  value=attrMeta.default).event_handle(oj.input, input_change)
-                
-            )
-
+            input_ = oj.Input_(f"{key}cbox", type='checkbox',  value=attrMeta.default,
+                            pcp=['form-checkbox']).event_handle(oj.input, input_change)
+            return build_kv_record(key, label,  input_)
+        
         case "<aenum 'Position'>" | "<aenum 'TextAlign'>" | "<aenum 'PointStyle'>" | "<aenum 'cubicInterpolationMode'>" | "<aenum 'LineJoinStyle'>":
-            print("TODO: ui for  EnumType config not implement")
-            # return wf.Wrapdiv_(
-            #     wf.SelectorWBanner_(key, label,
-            #                         options=[
-            #                             _.value for _ in attrMeta.vtype],
-            #                         values=[
-            #                             _.value for _ in attrMeta.vtype],
-            #                         default_idx=[
-            #                             _.value for _ in attrMeta.vtype].index(attrMeta.default.value),
-
-            #                         on_select=update_chart, pcp=pcp
-            #                         )
-            # )
-            return ojx.EnumSelector_(key, attrMeta.vtype, label=key, on_select = input_change)
+            input_ =  ojx.EnumSelector_(key, attrMeta.vtype, label=key, on_select = input_change)
+            return build_kv_record(key, label,  input_)
 
         # by design we don't allow plottype change to be interactive;plottype has to selected initially as is fixed
         # for rest of the lifecycle

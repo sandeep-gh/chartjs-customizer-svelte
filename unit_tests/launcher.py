@@ -30,11 +30,11 @@ jp.Route("/", wp_chartCustomizer)
 
 
 
-# app = jp.app
+#app = jp.app
 # jp.justpy(wp_chartSetup,  debug=True, start_server=False)
 # request = Dict()
 # request.session_id = "asession"
-# wp = wp_chartSetup(request)
+# wp = wp_chartCustomizer(request)
 # stubStore = wp.session_manager.stubStore
 # print (stubStore.scaleCfg.deckpanel.keys())
 # plottype_stub = stubStore.chartSetup['/type']

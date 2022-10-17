@@ -13,7 +13,9 @@ setupChoices.axes.type = AxesType.cartesian
 setupChoices.axises =  ['x', 'y'] #We have default cartesian axes 
 cfgAttrMeta = get_basecfg(setupChoices)
 
-for _ in oj.dictWalker(cfgAttrMeta):
-    print (_[0])
-    print ("--------------------------")
+res = [_[0] for _ in filter(lambda cxt: 'scales/x' in  cxt[0], oj.dictWalker(cfgAttrMeta))]
+print (res)
+# for _ in oj.dictWalker(cfgAttrMeta):
+#     print (_[0])
+#     print ("--------------------------")
 

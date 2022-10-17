@@ -14,12 +14,15 @@ import ofjustpy_extn as ojx
 from tailwind_tags import bg, pink, jc, db, jc, mr, shdw, gray, blue, W, full, ta
 import traceback
 #from . import attrmeta_utils
+import hashlib 
+
 
 @ojr.CfgLoopRunner
 def on_plotType_select(dbref, msg):
     '''
     plotType is special; scale configuration panel is updated on change in plot type
     '''
+    #TBD
     #print("on_plotTypeSelect")
     #msg.page.update_scale_configurator(dbref, msg)
     #msg.page.update_ui_component(dbref, msg)  # in case there are other changes
@@ -33,25 +36,28 @@ def reactor(dbref, msg):
 #     print("Debug ColorSelector ", dbref.key, " ", msg.value)
 
 
-def no_action(dbref, msg):
-    pass
+# def no_action(dbref, msg):
+#     pass
 
 
-def input_change(dbref, msg):
-    pass
+# def input_change(dbref, msg):
+#     print("ui changed on frontend for key=", dbref.stub.key)
+#     pass
 
 
+@ojr.CfgLoopRunner
 def update_chart(dbref, msg):
     #msg.page.react_ui(wf.ReactTag_UI.UpdateChart, None)
-    assert False
+    print ("update_chart: sending to loop ", dbref.stub.key, msg.value)
+    return dbref.stub.key, msg.value
 
 
 def build_kv_record(key, label, component_):
     pcp = component_.kwargs.get('twsty_tags')
-    pcp.append(W/"3/4")
+    #pcp.append(W/"3/4")
     eq_ = oj.Span_("eqt", text=":", pcp=[jc.center])
     label_= oj.Span_("aspan", text=label , pcp=[ta.end, W/"1/2"])
-    rec_ = oj.StackH_(key, cgens=[ label_, eq_, oj.Halign_(component_, "start")], pcp=[W/full])
+    rec_ = oj.StackH_(f"{key}rec", cgens=[ label_, eq_, oj.Halign_(component_, "start")], pcp=[W/full])
     #records_ = oj.Align_(oj.StackV_("records", cgens=[r1_, r1_]))
     return rec_
 
@@ -62,15 +68,15 @@ def build_uic(key, label, attrMeta):
     """
     #pcp = [shdw.md, bg/gray/1]
     pcp = []
-    if not attrMeta.active:
-        pcp.append("hidden")
-        logger.debug(f"now building ui:hidden for  {key} {attrMeta}  {pcp}")
+    # if not attrMeta.active:
+    #     pcp.append("hidden")
+    #     logger.debug(f"now building ui:hidden for  {key} {attrMeta}  {pcp}")
     match str(attrMeta.vtype):
         case "<class 'int'>":
 
             match attrMeta.vrange:
                 case type():
-                    input_ = oj.InputChangeOnly_("input",
+                    input_ = oj.InputChangeOnly_(key,
                                                  placeholder=attrMeta.default,
                                                  type="text").event_handle(oj.change,
                                                                              update_chart)
@@ -97,7 +103,7 @@ def build_uic(key, label, attrMeta):
         case "<class 'str'>":
             match attrMeta.vrange:
                 case type():
-                    input_ = oj.InputChangeOnly_("input",
+                    input_ = oj.InputChangeOnly_(key,
                                                  placeholder=attrMeta.default,
                                                  type="text").event_handle(oj.change,
                                                                              update_chart)
@@ -105,16 +111,16 @@ def build_uic(key, label, attrMeta):
                     return build_kv_record(key, label,  input_)
 
                 case[x, y]:
-                    print("skipping str range ", key)
+                    #print("skipping str range ", key)
                     return None
                 case _:
-                    print("skipping str", key)
+                    #print("skipping str", key)
                     return None
         case "<class 'float'>":
             match attrMeta.vrange:
                 case type():
                     # Put float type
-                    input_ = oj.InputChangeOnly_("input",
+                    input_ = oj.InputChangeOnly_(key,
                                                  placeholder=attrMeta.default,
                                                  type="text").event_handle(oj.change,
                                                                              update_chart)
@@ -133,18 +139,19 @@ def build_uic(key, label, attrMeta):
                     return None
 
         case "<aenum 'Color'>":
-
+            #print ("build color selector for key = ", key)
             input_ = oj.ColorSelector_(key).event_handle(oj.click, update_chart)
             return build_kv_record(key, label,  input_)
         
 
         case "<class 'bool'>" | "<aenum 'FalseDict'>":
-            input_ = oj.Input_(f"{key}cbox", type='checkbox',  value=attrMeta.default,
-                            pcp=['form-checkbox']).event_handle(oj.input, input_change)
+            #TODO: form-checkbox
+            input_ = oj.Input_(f"{key}", type='checkbox',  value=attrMeta.default,
+                            pcp=[]).event_handle(oj.input, reactor)
             return build_kv_record(key, label,  input_)
         
         case "<aenum 'Position'>" | "<aenum 'TextAlign'>" | "<aenum 'PointStyle'>" | "<aenum 'cubicInterpolationMode'>" | "<aenum 'LineJoinStyle'>":
-            input_ =  ojx.EnumSelector_(key, attrMeta.vtype, label=key, on_select = input_change)
+            input_ =  ojx.EnumSelector_(key, attrMeta.vtype, label=key).event_handle(oj.change, update_chart)
             return build_kv_record(key, label,  input_)
 
         # by design we don't allow plottype change to be interactive;plottype has to selected initially as is fixed
@@ -174,7 +181,7 @@ def build_uic(key, label, attrMeta):
     return None
 
 
-def build_uic_iter(attrMetaIter):
+def build_uic_iter(attrMetaIter, session_manager):
     """
     attrMeta:  describes a ui component
     attrMetaIter:  a sequence of attrMeta
@@ -185,7 +192,7 @@ def build_uic_iter(attrMetaIter):
     # this is the subsection heading
     # yield dur.wrapdiv_(label+"Wrap", dc.Span_(label, label, pcp=[bg/pink/1]))
 
-    logger.debug("now building uic_iter")
+    #logger.debug("now building uic_iter")
     #logger.info('General exception noted.', exc_info=True)
     # for line in traceback.format_stack():
     #     logger.debug(line.strip())
@@ -193,11 +200,16 @@ def build_uic_iter(attrMetaIter):
 
     def build_uic_wrapper(kpath, attrMeta):
         logger.debug(f"uic_iter {kpath}")
-        _ = kpath.split("/")
-        if _[-1] == "value":  # value is used for FalseDict type attrmeta
-            del _[-1]
-        #print ("in uic ", kpath)
-        return build_uic(kpath, _[-2]+"/"+_[-1], attrMeta)
+        path_parts = kpath.split("/")[1:]
+        if path_parts[-1] == "value":  # value is used for FalseDict type attrmeta
+            del path_parts[-1]
+            
+        print ("in uic ", kpath)
+
+        path_uniq_id = "".join(path_parts)
+        print ("path_uniq_id = ", path_uniq_id)
+        with session_manager.uictx(path_uniq_id) as ctx:
+            return build_uic(kpath, path_parts[-2]+"/"+path_parts[-1], attrMeta)
     yield from filter(lambda _: _ is not None,
                       map(lambda _: build_uic_wrapper(_[0], _[1]),
                           attrMetaIter)

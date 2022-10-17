@@ -126,6 +126,7 @@ def AxisCfgOptions(_cfg):
     _.alignToPixels = AttrMeta(False, bool, bool, uiorgCat.TBD, False, [])
     _.backgroundColor = AttrMeta("", Color, Color, uiorgCat.simple, False,[])
     #TBD: padding
+    _.display = AttrMeta(True, bool, bool, uiorgCat.simple, True, [])
     _.min = AttrMeta(None, int, int, uiorgCat.config, False, [])
     _.max = AttrMeta(None, int, int, uiorgCat.config, False, [])
     _.reversed = AttrMeta(False, bool, bool, uiorgCat.TBD, False,[])
@@ -136,6 +137,37 @@ def AxisCfgOptions(_cfg):
     # move away from chart area
     _.weight = AttrMeta(0, int, int, uiorgCat.TBD, False, [])
 
+def AxisTitleCfgOptions(_cfg):
+    _ = _cfg
+    _.display = AttrMeta(True, bool, bool, uiorgCat.simple, False,[])
+    _cfg.align = AttrMeta(TextAlign.center,
+                          TextAlign,
+                          TextAlign,
+                          uiorgCat.simple,
+                          True,
+                          [
+                              ('/options/plugins/legend/display', True),
+                              ('/options/plugins/legend/display', False)
+                          ]
+                          )
+    _.text	= AttrMeta("axes-title", str, str, uiorgCat.simple, True,
+                           [
+                               ('/options/plugins/legend/display', True),
+                               ('/options/plugins/legend/display', False)
+                           ])
+    _.color = AttrMeta("",
+                       Color,
+                       Color,
+                       uiorgCat.nitpick,
+                       False,
+                       [
+                           ('/options/plugins/legend/display', True),
+                           ('/options/plugins/legend/display', False)
+                       ])
+    #_.font
+    _.padding = AttrMeta(
+        2, int, [0, 5], uiorgCat.nitpick, False, [])  # padding for label backdrop
+    
 def CartesianAxisCfgOption(_cfg):
     _ = _cfg
     _.bounds	= AttrMeta("axis_bounds", str, str, uiorgCat.simple, False, [])
@@ -146,7 +178,8 @@ def CartesianAxisCfgOption(_cfg):
     _.offset = AttrMeta(False, bool, bool, uiorgCat.config, False, [])
     
     #_.title	object		
-#    
+#
+
 def AxesTicksCfgOptions(_cfg):
     """
     Tick option for all axes
@@ -183,7 +216,7 @@ def CartesianTicksCfgOptions(_cfg):
     _.minRotation = AttrMeta(0, int, [0, 5], uiorgCat.advanced, False, [])
     _.mirror = AttrMeta(False, bool, bool, uiorgCat.advanced, False, [])
 
-def CartesianGrid(_cfg):
+def AxisGridCfgOptions(_cfg):
     _cfg.display = AttrMeta(
         False, bool, bool, uiorgCat.simple, True, [('/type', 'line')])
     _cfg.color = AttrMeta(
@@ -243,22 +276,34 @@ def get_basecfg(setupChoices):
 
         def Scales():
             scales = options.scales
+            def Axis(axis_id):
+                if axis_id:
+                    axis = scales[axis_id]
+                    AxisCfgOptions(axis)
+                    title = axis.title
+                    AxisTitleCfgOptions(title)
+
+                    grid = axis.grid
+                    AxisGridCfgOptions(grid)
+
+                    ticks = axis.ticks
+                    AxesTicksCfgOptions(ticks)
             def CartesianAxis(axis_id):
                 #following convention of chart.js to use
                 #obj for complex/nested json values
                 if axis_id:
                     axis = scales[axis_id]
-                    AxisCfgOptions(axis)
+                    #AxisCfgOptions(axis)
                     CartesianAxisCfgOption(axis)
 
                     
                     #apply object options common to all cartesian axis
                     # e.g grid , title, position, ticks
-                    grid = axis.grid
-                    CartesianGrid(grid)
+                    #grid = axis.grid
+                    #CartesianGrid(grid)
                     # ticks
                     ticks = axis.ticks
-                    AxesTicksCfgOptions(ticks)
+                    #AxesTicksCfgOptions(ticks)
                     CartesianTicksCfgOptions(ticks)
                 # def Grid():
                 #     # TODO: grid shouldn't belong to scales; 
@@ -266,7 +311,10 @@ def get_basecfg(setupChoices):
                 #     CartesianGrid(grid)
                 # CartesianAxis.Grid = Grid
             CartesianAxis(None)
+            Axis(None)
+            
             Scales.CartesianAxis = CartesianAxis
+            Scales.Axis = Axis
         Scales()
         Options.Scales = Scales
 
@@ -279,6 +327,7 @@ def get_basecfg(setupChoices):
         match setupChoices.axes.type:
             case AxesType.cartesian:
                for axis in setupChoices.axises:
+                   Options.Scales.Axis(axis)
                    Options.Scales.CartesianAxis(axis)
     Options.Plugins.Legend()  # also includes Legend.Labels,Legend.Title
     

@@ -21,7 +21,10 @@ from .attrmeta_basecfg import get_basecfg
 from .attrmeta_basecfg_helper import is_visible
 from .attrmeta_basecfg_helper import uiorgCat, PlotType
 from .attrmeta_basecfg_helper import AxesType, PlotType
-from tailwind_tags import space, y
+from tailwind_tags import space, y, W, full, ppos
+
+#/home/kabira/Development/ofjustpy-svelte-tailwind-components/ofjustpy_svelte_tailwind_components/ChartJS.py
+from ofjustpy_svelte_tailwind_components import ChartJS_
 top_level_group = ["options/elements",
                    "options/plugins", "options/scales", "data"]
 tier1_level_group = {"options/elements": ["line", "point"],
@@ -30,7 +33,7 @@ tier1_level_group = {"options/elements": ["line", "point"],
                      "data": ['datasets/0', 'datasets/1', 'datasets/2', 'datasets/3', 'datasets/4']}
 
 
-def build_uigroup_blocks_(grouptag: str,   cfgattrmeta: Dict):
+def build_uigroup_blocks_(grouptag: str,   cfgattrmeta: Dict, session_manager):
     """Builds a panel containing ui elements for cfgattributes in cfgattrmeta belonging
     to grouptag.
     ui_elemts are stacked in grid/auto-flow.  
@@ -93,9 +96,13 @@ def build_uigroup_blocks_(grouptag: str,   cfgattrmeta: Dict):
         yield from filter(lambda _: is_in_subgroup(_[0]), group_iter())
 
     def build_ui_panel(tlkey, subkey=None):
-        return oj.StackV_(tlkey, cgens = build_uic_iter(subgroup_iter(
-                              tlkey, subkey)),
-                          pcp=[space/y/2])
+        return ojx.TwoColumnStackV_(tlkey, cgens = build_uic_iter(subgroup_iter(
+                              tlkey, subkey), session_manager),
+                          pcp=[W/full])
+    
+        # return oj.StackV_(tlkey, cgens = build_uic_iter(subgroup_iter(
+        #                       tlkey, subkey)),
+        #                   pcp=[space/y/2])
         # return oj.StackG_(tlkey, num_cols=2,
         #                   cgens=build_uic_iter(subgroup_iter(
         #                       tlkey, subkey),  # all cfgattr that come under options but not under elements or scales
@@ -119,6 +126,31 @@ def build_uigroup_blocks_(grouptag: str,   cfgattrmeta: Dict):
 
     return cfgblks_iter()
 
+def chart_in_box(cfgAttrMeta):
+    afunc = lambda x : True
+    reactctx = [ojr.Ctx(_[0],  afunc, ojr.UIOps.UPDATE_CHART)
+                for _ in filter(lambda cxt: 'scales/x' in  cxt[0], oj.dictWalker(cfgAttrMeta))
+                ]
+
+    # reactctx = [ojr.Ctx("/options/scales/x/title/text",
+    #                     lambda x: True,
+    #                     ojr.UIOps.UPDATE_CHART
+    #                     )
+    #             ]
+    cjs_ = ChartJS_("mychart",
+                    chart_name = "Pop chart",
+                    reactctx = reactctx
+                    )
+    chart_cbox_ = oj.Div_("cbox", cgens=[cjs_], pcp = [ppos.relative])
+    return chart_cbox_
+
+
+def all_components(grouptag, cfgattrmeta, session_manager):
+    """
+    return all ui components for 
+    """
+    yield chart_in_box(cfgattrmeta)
+    yield from build_uigroup_blocks_(grouptag, cfgattrmeta, session_manager)
 # ============================ for testing ===========================
 # setupChoices = Dict()
 # setupChoices.plotType = PlotType.Line

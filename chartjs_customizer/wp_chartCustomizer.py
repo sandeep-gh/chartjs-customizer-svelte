@@ -7,7 +7,7 @@ if logging:
 import justpy as jp
 import ofjustpy as oj
 import ofjustpy_react as ojr
-from .components_chartCustomizer import build_uigroup_blocks_
+from .components_chartCustomizer import all_components
 
 from addict import Dict
 from . import actions
@@ -59,39 +59,51 @@ def init(appstate):
     logger.debug("cjs_cfg")
     logger.debug(jsbeautifier.beautify(json.dumps(cjs_cfg), opts))
 
-
+    return 
 # ========================= done update cycle ========================
-ui_app_trmap_iter = [
-    ]
+
 
 def wp_chartCustomizer(request):
     session_id = request.session_id
     session_manager = oj.get_session_manager(session_id)
     stubStore = session_manager.stubStore
     appstate = session_manager.appstate
-    appstate.cfgbase.type = None
     setupChoices = Dict()
     setupChoices.plotType = PlotType.Line
     setupChoices.axes.type = AxesType.cartesian #This happens because the plot type is 'Line/Bar/Bubble/Scatter'
     #jsetupChoices.axis.type = CartesianAxisType.linear
     
     setupChoices.axises =  ['x', 'y'] #We have default cartesian axes 
-    appstate.cfgAttrMeta = get_basecfg(setupChoices)
+    cfgAttrMeta = get_basecfg(setupChoices)
+    ui_app_kmap = [(_[0], _[0], lambda x, spath=_[0]: (spath, x)) for _ in oj.dictWalker(cfgAttrMeta)
+    ]
 
+    # keep loop history clear 
+    appstate.clear_changed_history()
     with oj.sessionctx(session_manager):
         #build_components(session_manager)
 
         # aspan_ = oj.Span_("aspan", text="dummy text"
         #          )
-        cgens =  build_uigroup_blocks_(uiorgCat.all, appstate.cfgAttrMeta)
-        #cgens = [stubStore.scaleCfg.lineplot.xyaxes._xaxes.panel]
+        # generate all the components before passing to webpage
+        # else it won't be registered in the webpage
+        #cgens = all_components(uiorgCat.all, cfgAttrMeta)
+        cgens =  [_ for _ in all_components(uiorgCat.all, cfgAttrMeta, session_manager)]
+        def on_btn_click(dbref,msg):
+            print("button clicked")
+            pass
 
+        colorselector_ = oj.ColorSelector_(
+            "colorselector").event_handle(
+                        oj.click, on_btn_click)
+        cgens.append(colorselector_)
+        #cgens = [stubStore.scaleCfg.lineplot.xyaxes._xaxes.panel]
         # ============ porting to ofjustpy react framework ===========
         
         wp = oj.WebPage_("wp_chartjs_customizer",
                          cgens= cgens,
                          WPtype=ojr.WebPage,
-                         ui_app_trmap_iter = ui_app_trmap_iter,
+                         ui_app_trmap_iter = ui_app_kmap,
                          session_manager = session_manager,
                          action_module = actions,
                          
@@ -101,8 +113,6 @@ def wp_chartCustomizer(request):
         wp.session_manager = session_manager
         #wp = jp.WebPage(template_file='svelte.html', title="a svelte page")
     return wp
-
-
 
 # from starlette.testclient import TestClient
 # client = TestClient(app)

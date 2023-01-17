@@ -47,8 +47,6 @@ def reactor(dbref, msg):
 
 @ojr.CfgLoopRunner
 def update_chart(dbref, msg):
-    #msg.page.react_ui(wf.ReactTag_UI.UpdateChart, None)
-    print ("update_chart: sending to loop ", dbref.stub.key, msg.value)
     return dbref.stub.key, msg.value
 
 
@@ -204,12 +202,9 @@ def build_uic_iter(attrMetaIter, session_manager):
         if path_parts[-1] == "value":  # value is used for FalseDict type attrmeta
             del path_parts[-1]
             
-        print ("in uic ", kpath)
-
-        path_uniq_id = "".join(path_parts)
-        print ("path_uniq_id = ", path_uniq_id)
-        with session_manager.uictx(path_uniq_id) as ctx:
-            return build_uic(kpath, path_parts[-2]+"/"+path_parts[-1], attrMeta)
+        #path_uniq_id = "".join(path_parts)
+        #with session_manager.uictx(path_uniq_id) as ctx:
+        return build_uic(kpath, path_parts[-2]+"/"+path_parts[-1], attrMeta)
     yield from filter(lambda _: _ is not None,
                       map(lambda _: build_uic_wrapper(_[0], _[1]),
                           attrMetaIter)

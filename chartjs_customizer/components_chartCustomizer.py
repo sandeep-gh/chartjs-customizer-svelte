@@ -33,7 +33,7 @@ tier1_level_group = {"options/elements": ["line", "point"],
                      "data": ['datasets/0', 'datasets/1', 'datasets/2', 'datasets/3', 'datasets/4']}
 
 
-def build_uigroup_blocks_(grouptag: str,   cfgattrmeta: Dict, session_manager):
+def build_uigroup_blocks_(grouptag: str,   cfgattrmeta: Dict, session_manager, dockbar_):
     """Builds a panel containing ui elements for cfgattributes in cfgattrmeta belonging
     to grouptag.
     ui_elemts are stacked in grid/auto-flow.  
@@ -96,9 +96,20 @@ def build_uigroup_blocks_(grouptag: str,   cfgattrmeta: Dict, session_manager):
         yield from filter(lambda _: is_in_subgroup(_[0]), group_iter())
 
     def build_ui_panel(tlkey, subkey=None):
-        return ojx.TwoColumnStackV_(tlkey, cgens = build_uic_iter(subgroup_iter(
-                              tlkey, subkey), session_manager),
+        cgens = build_uic_iter(subgroup_iter(
+                              tlkey, subkey), session_manager)
+        # assert cgens is not None
+        panel_label = tlkey
+        if subkey:
+            panel_label = tlkey + "_" + subkey
+        panel_ =  ojx.TwoColumnStackV_(panel_label, cgens = cgens,
                           pcp=[W/full])
+
+        # do not dockify top panel
+        # if subkey is not None:
+        #     dock_btn_  = dockbar_.dockify(panel_)
+        #     panel_.add_cgen(dock_btn_)
+        return panel_
     
         # return oj.StackV_(tlkey, cgens = build_uic_iter(subgroup_iter(
         #                       tlkey, subkey)),
@@ -113,8 +124,14 @@ def build_uigroup_blocks_(grouptag: str,   cfgattrmeta: Dict, session_manager):
     tier1_level_ui = Dict()
     for tlkey in top_level_group:
         for subkey in tier1_level_group[tlkey]:
-            subpanel_ = oj.Subsubsection_(
-                f"{tlkey}_{subkey}",  f"{tlkey}/{subkey}", build_ui_panel(tlkey, subkey))
+            subpanel_ = oj.Subsubsection_(f"{tlkey}_{subkey}",
+                                          f"{tlkey}/{subkey}",
+                                          build_ui_panel(tlkey, subkey),
+                                          pcp=[ppos.relative],
+                                          dock_label = f"{tlkey}/{subkey}"
+                                          )
+            dock_btn_ = dockbar_.dockify(subpanel_)
+            subpanel_.add_cgen(dock_btn_)
             tier1_level_ui[tlkey][subkey] = subpanel_
 
     def cfgblks_iter():
@@ -139,7 +156,8 @@ def chart_in_box(cfgAttrMeta):
     #             ]
     cjs_ = ChartJS_("mychart",
                     chart_name = "Pop chart",
-                    reactctx = reactctx
+                    reactctx = reactctx,
+                    cgens = []
                     )
     chart_cbox_ = oj.Div_("cbox", cgens=[cjs_], pcp = [ppos.relative])
     return chart_cbox_
@@ -149,8 +167,15 @@ def all_components(grouptag, cfgattrmeta, session_manager):
     """
     return all ui components for 
     """
+
     yield chart_in_box(cfgattrmeta)
-    yield from build_uigroup_blocks_(grouptag, cfgattrmeta, session_manager)
+    dockbar_ = ojx.Dockbar_('dockbar',
+                            undock_btn_sty = ojx.undock_btn_sty,
+                            dock_btn_gen= ojx.dock_btn_gen,
+                            
+                            )
+    yield dockbar_
+    yield from build_uigroup_blocks_(grouptag, cfgattrmeta, session_manager, dockbar_)
 # ============================ for testing ===========================
 # setupChoices = Dict()
 # setupChoices.plotType = PlotType.Line
